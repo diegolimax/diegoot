@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mod name="Mod Cast" version="1.0" author="Martyx" contact="martyx@otland.net" enabled="yes">
+	<event type="logout" name="cast-log-out" event="script"><![CDATA[
+		function onLogout(cid, forceLogout)
+			if(getCreatureNoMove(cid)) then
+				return false
+			end
+			
+			if(not hasPlayerClient(cid)) then
+				db.executeQuery("UPDATE `players` SET `broadcasting` = 0, `viewers` = 0 WHERE `id` = " .. getPlayerGUID(cid) .. " LIMIT 1")
+			else
+				db.executeQuery("UPDATE `players` SET `broadcasting` = 0, `viewers` = 0 WHERE `id` = " .. getPlayerGUID(cid) .. " LIMIT 1")
+			end
+
+			setPlayerStorageValue(cid, 45503, 0) -- set cast off command
+			setPlayerStorageValue(cid, 45504, 0) -- set cast password off command
+			doCreatureSetStorage(cid, "save")
+			return true
+		end
+	]]></event>
+	<globalevent name="viewers" interval="10000" event="script"><![CDATA[
+		function onThink(interval)
+			local players = getPlayersOnline()
+			for _, pid in ipairs(players) do
+				local data = getPlayerSpectators(pid)
+				if(data.broadcast) then
+					db.executeQuery("UPDATE `players` SET `viewers` = " .. table.maxn(data.names) .. " WHERE `id` = " .. getPlayerGUID(pid) .. ";")
+				end
+			end
+
+			return true
+		end
+	]]></globalevent>
+</mod>
